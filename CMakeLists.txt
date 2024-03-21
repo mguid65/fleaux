@@ -30,7 +30,7 @@ if(${FLEAUX_USE_FETCH_CONTENT})
     FetchContent_Declare(
             data_tree
             GIT_REPOSITORY "https://github.com/mguid65/datatree"
-            GIT_TAG "v0.0.5"
+            GIT_TAG "v0.0.6"
     )
     FetchContent_MakeAvailable(data_tree)
 else()

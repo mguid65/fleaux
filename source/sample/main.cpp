@@ -11,22 +11,26 @@
 
 #include "fleaux/fleaux.hpp"
 
-static auto PRINT = fleaux::Node{}.AddEvaluationFunction([](const auto& data) {
+using namespace mguid::literals;
+static auto Print = fleaux::Node{}.SetEvaluationFunction([](const auto& data) {
   std::cout << data;
   return data;
 });
 
-static auto PRINTLN = fleaux::Node{}.AddEvaluationFunction([](const auto& data) {
-  data | PRINT;
+static auto Println = fleaux::Node{}.SetEvaluationFunction([](const auto& data) {
+  data | Print;
   std::cout << std::endl;
   return data;
 });
 
-static auto ADD =
+static auto Add =
     fleaux::Node{}
-        .AddInputChannel("lhs", fleaux::ChannelInfo{})
-        .AddInputChannel("rhs", fleaux::ChannelInfo{})
-        .AddEvaluationFunction([](const auto& data) {
+        .SetInputInfo({{"lhs", fleaux::DataInfo{.shape = mguid::DataTree{mguid::ObjectNodeType{
+                                                    {"type", "Number"_DT_STR}}}}},
+                       {"rhs", fleaux::DataInfo{.shape = mguid::DataTree{mguid::ObjectNodeType{
+                                                    {"type", "Number"_DT_STR}}}}}})
+        .SetOutputInfo({{"result", fleaux::DataInfo{}}})
+        .SetEvaluationFunction([](const auto& data) {
           static constexpr auto common =
               [](const auto& expected_lhs_inner,
                  const auto& expected_rhs_inner) -> std::optional<mguid::NumberType> {
@@ -55,11 +59,14 @@ static auto ADD =
           throw std::runtime_error{"Incorrect operand types for \"ADD\" operation"};
         });
 
-static auto SUBTRACT =
+static auto Subtract =
     fleaux::Node{}
-        .AddInputChannel("lhs", fleaux::ChannelInfo{})
-        .AddInputChannel("rhs", fleaux::ChannelInfo{})
-        .AddEvaluationFunction([](const auto& data) {
+        .SetInputInfo({{"lhs", fleaux::DataInfo{.shape = mguid::DataTree{mguid::ObjectNodeType{
+                                                    {"type", "Number"_DT_STR}}}}},
+                       {"rhs", fleaux::DataInfo{.shape = mguid::DataTree{mguid::ObjectNodeType{
+                                                    {"type", "Number"_DT_STR}}}}}})
+        .SetOutputInfo({{"result", fleaux::DataInfo{}}})
+        .SetEvaluationFunction([](const auto& data) {
           static constexpr auto common =
               [](const auto& expected_lhs_inner,
                  const auto& expected_rhs_inner) -> std::optional<mguid::NumberType> {
@@ -88,11 +95,14 @@ static auto SUBTRACT =
           throw std::runtime_error{"Incorrect operand types for \"SUBTRACT\" operation"};
         });
 
-static auto MULTIPLY =
+static auto Multiply =
     fleaux::Node{}
-        .AddInputChannel("lhs", fleaux::ChannelInfo{})
-        .AddInputChannel("rhs", fleaux::ChannelInfo{})
-        .AddEvaluationFunction([](const auto& data) {
+        .SetInputInfo({{"lhs", fleaux::DataInfo{.shape = mguid::DataTree{mguid::ObjectNodeType{
+                                                    {"type", "Number"_DT_STR}}}}},
+                       {"rhs", fleaux::DataInfo{.shape = mguid::DataTree{mguid::ObjectNodeType{
+                                                    {"type", "Number"_DT_STR}}}}}})
+        .SetOutputInfo({{"result", fleaux::DataInfo{}}})
+        .SetEvaluationFunction([](const auto& data) {
           static constexpr auto common =
               [](const auto& expected_lhs_inner,
                  const auto& expected_rhs_inner) -> std::optional<mguid::NumberType> {
@@ -121,11 +131,14 @@ static auto MULTIPLY =
           throw std::runtime_error{"Incorrect operand types for \"MULTIPLY\" operation"};
         });
 
-static auto DIVIDE =
+static auto Divide =
     fleaux::Node{}
-        .AddInputChannel("lhs", fleaux::ChannelInfo{})
-        .AddInputChannel("rhs", fleaux::ChannelInfo{})
-        .AddEvaluationFunction([](const auto& data) {
+        .SetInputInfo({{"lhs", fleaux::DataInfo{.shape = mguid::DataTree{mguid::ObjectNodeType{
+                                                    {"type", "Number"_DT_STR}}}}},
+                       {"rhs", fleaux::DataInfo{.shape = mguid::DataTree{mguid::ObjectNodeType{
+                                                    {"type", "Number"_DT_STR}}}}}})
+        .SetOutputInfo({{"result", fleaux::DataInfo{}}})
+        .SetEvaluationFunction([](const auto& data) {
           static constexpr auto common =
               [](const auto& expected_lhs_inner,
                  const auto& expected_rhs_inner) -> std::optional<mguid::NumberType> {
@@ -151,14 +164,43 @@ static auto DIVIDE =
               return mguid::DataTree{*result};
             }
           }
-          throw std::runtime_error{"Incorrect operand types for \"SUBTRACT\" operation"};
+          throw std::runtime_error{"Incorrect operand types for \"Divide\" operation"};
         });
 
+using mguid::ArrayNodeType;
+using mguid::DataTree;
+using mguid::ObjectNodeType;
+using mguid::ValueNodeType;
+
+template <typename... TDataTrees>
+DataTree Arr(TDataTrees&&... tree_list) {
+  return DataTree{ArrayNodeType{std::forward<TDataTrees>(tree_list)...}};
+}
+
+template <typename TDataTrees>
+DataTree Val(TDataTrees&& value) {
+  return DataTree{ValueNodeType{std::forward<TDataTrees>(value)}};
+}
+
+DataTree Obj(std::initializer_list<std::pair<const std::string, DataTree>> args) {
+  return DataTree{ObjectNodeType{args}};
+}
+
+template <typename TFunc>
+fleaux::Node Lazy(TFunc&& func) {
+  return fleaux::Node().SetEvaluationFunction(std::forward<TFunc>(func));
+};
+
 auto main() -> int {
-  using ARR = mguid::ArrayNodeType;
-  using DT = mguid::DataTree;
   using namespace mguid::literals;
 
-  DT{ARR{DT{ARR{{DT{ARR{DT{5}, DT{5}}} | ADD}, DT{5}}} | ADD, DT{2}}} | SUBTRACT | PRINTLN;
-  DT{"Hello, World!"} | PRINT;
+  auto AddPrint = Lazy([](DataTree dt) { return dt | Add | Println; });
+
+//  Obj({{"lhs", Val(4)}, {"rhs", Val(6)}}) | AddPrint;
+
+  Arr(Val(5), Val(6)) | AddPrint;
+
+//  Val("Hello, World!") | Println;
+//
+//  Val(true) | Println;
 }
