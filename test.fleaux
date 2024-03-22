@@ -1,0 +1,10 @@
+let MultiplyPrint(x : Number) : Number :: (x) -> Multiply -> Println;
+let AddPrint(x : Number, y : Number) : Number :: (x, y) -> Add -> Println;
+
+// y = 4x^7 - x^5
+let Polynomial(x : Number) : Number :: (((4, x) -> MultiplyPrint, 7) -> Pow, (x, 5) -> Pow) -> Subtract;
+let Polynomial2(x : Number) : Number :: ((4*x)^7) - (x^5);
+(1, 2) -> AddPrint;
+// COMMENT
+
+("Hello, World!") -> Println;
