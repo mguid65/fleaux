@@ -35,28 +35,32 @@ type:
   NUMBER | STRING | BOOL | NULL | ANY | identifier | '(' type_list ')';
 
 expression:
-  constant |
-  identifier |
-  '(' expression ')' |
-  expression PIPELINE_OPERATOR expression {left, 10} |
-  expression PLUS_OPERATOR expression {left, 5} |
-  expression MINUS_OPERATOR expression {left, 5} |
-  expression DIVIDE_OPERATOR expression {left, 6} |
-  expression MULTIPLY_OPERATOR expression {left, 6} |
-  expression MODULUS_OPERATOR expression {left, 6} |
-  expression EXPONENT_OPERATOR expression {right, 7} |
-  expression EQ_OPERATOR expression {left, 4} |
-  expression NE_OPERATOR expression {left, 4} |
-  expression LT_OPERATOR expression {left, 4} |
-  expression GT_OPERATOR expression {left, 4} |
-  expression GE_OPERATOR expression {left, 4} |
-  expression LE_OPERATOR expression {left, 4} |
-  expression OR_OPERATOR expression {left, 1} |
-  expression AND_OPERATOR expression {left, 2} |
-  expression COMMA expression {left, 1} |
+  term |
+  term PIPELINE_OPERATOR expression {left, 10} |
+  term PLUS_OPERATOR expression {left, 5} |
+  term MINUS_OPERATOR expression {left, 5} |
+  term DIVIDE_OPERATOR expression {left, 6} |
+  term MULTIPLY_OPERATOR expression {left, 6} |
+  term MODULUS_OPERATOR expression {left, 6} |
+  term EXPONENT_OPERATOR expression {right, 7} |
+  term EQ_OPERATOR expression {left, 4} |
+  term NE_OPERATOR expression {left, 4} |
+  term LT_OPERATOR expression {left, 4} |
+  term GT_OPERATOR expression {left, 4} |
+  term GE_OPERATOR expression {left, 4} |
+  term LE_OPERATOR expression {left, 4} |
+  term OR_OPERATOR expression {left, 1} |
+  term AND_OPERATOR expression {left, 2} |
+  term COMMA expression {left, 1} |
   NOT_OPERATOR expression {right, 3} |
   PLUS_OPERATOR expression {right, 1} |
   MINUS_OPERATOR expression {right, 1};
+
+term:
+  constant | identifier | '(' expression ')';
+
+qualified_id:
+  identifier PERIOD identifier;
 
 identifier:
   ID;
@@ -103,24 +107,21 @@ NULL: "Null";
 TRUE: "True";
 FALSE: "False";
 ANY: "Any";
-COMMA: ',';
+COMMA: ",";
+PERIOD: ".";
 
 WS: /\s+/;
 Comment: /\/\/.*/;
 ''')
 
-actions = {
-    "program": lambda _, nodes: nodes[1]
-}
-
-parser = Parser(grammar, build_tree=True, debug=True, actions=actions)
+parser = Parser(grammar, build_tree=True)
 
 result = parser.parse('''
-let Multiply2(x : Number) : Number :: (x) -> Multiply -> Println; 
-let AddPrint(x : Number, y: Number) : Number :: (x, y) -> Add -> Println;
+let Multiply2(x : Number) : Number :: (x) -> Std.Multiply -> Std.Println; 
+let AddPrint(x : Number, y: Number) : Number :: (x, y) -> Std.Add -> Std.Println;
 
 // y = 4x^7 - x^5
-let Polynomial(x : Number) : Number :: ((((4, x) -> Multiply, 7) -> Pow, x) -> Subtract, 5) -> Pow;
+let Polynomial(x : Number) : Number :: ((((4, x) -> Std.Multiply, 7) -> Std.Pow), ((x, 5) -> Std.Pow)) -> Std.Subtract;
 let Polynomial2(x : Number) : Number :: ((4*x)^7) - (x^5);
 (1, 2) -> AddPrint;
 // COMMENT
